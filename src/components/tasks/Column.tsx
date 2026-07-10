@@ -17,9 +17,12 @@ interface Props {
   status: TaskStatus;
   label: string;
   tasks: Task[];
+  onAddTask: () => void;
+  onEditTask: (task: Task) => void;
+  onDeleteTask: (task: Task) => void;
 }
 
-export default function Column({ status, label, tasks }: Props) {
+export default function Column({ status, label, tasks, onAddTask, onEditTask, onDeleteTask }: Props) {
   return (
     <div className="flex min-h-[420px] flex-col rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
       {/* Column header */}
@@ -28,9 +31,20 @@ export default function Column({ status, label, tasks }: Props) {
           <span className={`h-2 w-2 rounded-full ${DOT[status]}`} />
           <h2 className={`text-sm font-semibold ${ACCENT[status]}`}>{label}</h2>
         </div>
-        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-500">
-          {tasks.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-500">
+            {tasks.length}
+          </span>
+          <button
+            onClick={onAddTask}
+            className="flex h-6 w-6 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-700 hover:text-zinc-100"
+            aria-label="Add task"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Tasks */}
@@ -40,7 +54,14 @@ export default function Column({ status, label, tasks }: Props) {
             <p className="text-xs text-zinc-600">No tasks for this day</p>
           </div>
         ) : (
-          tasks.map((task) => <TaskCard key={task.id} task={task} />)
+          tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onEdit={() => onEditTask(task)}
+              onDelete={() => onDeleteTask(task)}
+            />
+          ))
         )}
       </div>
     </div>
