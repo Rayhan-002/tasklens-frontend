@@ -1,3 +1,4 @@
+import { useDroppable } from '@dnd-kit/core';
 import { Task, TaskStatus } from '@/types';
 import TaskCard from './TaskCard';
 
@@ -23,8 +24,20 @@ interface Props {
 }
 
 export default function Column({ status, label, tasks, onAddTask, onEditTask, onDeleteTask }: Props) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `column-${status}`,
+    data: { type: 'column', status },
+  });
+
   return (
-    <div className="flex min-h-[420px] flex-col rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+    <div
+      ref={setNodeRef}
+      className={`flex min-h-[420px] flex-col rounded-xl border p-4 transition-colors ${
+        isOver
+          ? 'border-indigo-500/60 bg-indigo-500/5'
+          : 'border-zinc-800 bg-zinc-900/60'
+      }`}
+    >
       {/* Column header */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">

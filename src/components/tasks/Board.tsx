@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { DndContext, PointerSensor, closestCorners, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { toast } from 'sonner';
 import { useDateStore } from '@/store/dateStore';
 import { Task, Tag, TaskStatus } from '@/types';
 import api from '@/lib/api';
@@ -59,6 +62,31 @@ export default function Board() {
     setModal(null);
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  );
+
+  const handleDragEnd = async ({ active, over }: DragEndEvent) => {
+    if (!over) return;
+    const taskId = active.data.current?.taskId as number | undefined;
+    const fromStatus = active.data.current?.status as TaskStatus | undefined;
+    const toStatus = over.data.current?.status as TaskStatus | undefined;
+    if (!taskId || !fromStatus || !toStatus || fromStatus === toStatus) return;
+
+    let snapshot: Task[] = [];
+    setTasks((prev) => {
+      snapshot = prev;
+      return prev.map((t) => (t.id === taskId ? { ...t, status: toStatus } : t));
+    });
+
+    try {
+      await api.patch(`/tasks/${taskId}/`, { status: toStatus });
+    } catch {
+      setTasks(snapshot);
+      toast.error('Could not move task. Please try again.');
+    }
+  };
+
   const byStatus = (s: TaskStatus) => tasks.filter((t) => t.status === s);
 
   return (
@@ -68,19 +96,21 @@ export default function Board() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {COLUMNS.map((col) => (
-            <Column
-              key={col.status}
-              status={col.status}
-              label={col.label}
-              tasks={byStatus(col.status)}
-              onAddTask={() => setModal({ type: 'create', status: col.status })}
-              onEditTask={(task) => setModal({ type: 'edit', task })}
-              onDeleteTask={(task) => setModal({ type: 'delete', task })}
-            />
-          ))}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {COLUMNS.map((col) => (
+              <Column
+                key={col.status}
+                status={col.status}
+                label={col.label}
+                tasks={byStatus(col.status)}
+                onAddTask={() => setModal({ type: 'create', status: col.status })}
+                onEditTask={(task) => setModal({ type: 'edit', task })}
+                onDeleteTask={(task) => setModal({ type: 'delete', task })}
+              />
+            ))}
+          </div>
+        </DndContext>
       )}
 
       {/* Task create / edit modal */}

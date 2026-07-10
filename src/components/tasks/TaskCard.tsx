@@ -1,3 +1,5 @@
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { Task } from '@/types';
 
 const PRIORITY_STYLES: Record<Task['priority'], string> = {
@@ -13,8 +15,19 @@ interface Props {
 }
 
 export default function TaskCard({ task, onEdit, onDelete }: Props) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `task-${task.id}`,
+    data: { type: 'task', taskId: task.id, status: task.status },
+  });
+
   return (
-    <div className="group rounded-lg border border-zinc-700/50 bg-zinc-800/60 p-3 transition hover:border-zinc-600 hover:bg-zinc-800">
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{ transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1 }}
+      className="group rounded-lg border border-zinc-700/50 bg-zinc-800/60 p-3 transition hover:border-zinc-600 hover:bg-zinc-800 cursor-grab active:cursor-grabbing"
+    >
 
       {/* Title row — buttons sit in the flow, pushing title left */}
       <div className="flex items-start gap-2">
@@ -23,7 +36,7 @@ export default function TaskCard({ task, onEdit, onDelete }: Props) {
         </p>
 
         {/* Edit / Delete — hidden until hover, shrink-0 so they never compress the title */}
-        <div className="hidden shrink-0 gap-1 group-hover:flex">
+        <div className="hidden shrink-0 gap-1 group-hover:flex" onPointerDown={(e) => e.stopPropagation()}>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
             className="rounded p-1 text-zinc-500 transition hover:bg-zinc-700 hover:text-zinc-200"
