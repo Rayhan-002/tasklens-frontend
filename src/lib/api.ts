@@ -18,11 +18,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// On 401, clear tokens and redirect to login
+// On 401, clear tokens and redirect to login — but NOT for the login endpoint
+// itself, where a 401 simply means wrong credentials and must be handled by the caller.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    const isLoginRequest = error.config?.url?.includes('/auth/login/');
+    if (
+      error.response?.status === 401 &&
+      typeof window !== 'undefined' &&
+      !isLoginRequest
+    ) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       window.location.href = '/login';
