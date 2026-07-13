@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { DndContext, PointerSensor, closestCorners, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { toast } from 'sonner';
@@ -30,16 +30,22 @@ export default function Board() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<ModalState>(null);
 
-  const fetchTasks = useCallback(() => {
+  // Fetch tasks for selected date; abort if date changes before response arrives
+  useEffect(() => {
     setLoading(true);
+    const controller = new AbortController();
     api
-      .get<Task[]>('/tasks/', { params: { date: selectedDate } })
+      .get<Task[]>('/tasks/', { params: { date: selectedDate }, signal: controller.signal })
       .then((res) => setTasks(res.data))
-      .catch(() => setTasks([]))
+      .catch((err) => {
+        if (err?.code !== 'ERR_CANCELED') {
+          setTasks([]);
+          toast.error('Failed to load tasks. Please try again.');
+        }
+      })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, [selectedDate]);
-
-  useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
   useEffect(() => {
     api.get<Tag[]>('/tasks/tags/').then((res) => setTags(res.data)).catch(() => {});

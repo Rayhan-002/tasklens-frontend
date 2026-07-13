@@ -55,10 +55,12 @@ export default function AnnotationCanvas({ image, onPolygonSaved, onPolygonDelet
     return () => obs.disconnect();
   }, []);
 
-  // Reset draw state when image changes
+  // Reset draw state AND clear canvas when image changes
   useEffect(() => {
     setDraw({ mode: 'idle' });
     setLabel('');
+    setKonvaImage(null);
+    setImgLayout({ x: 0, y: 0, width: 0, height: 0 });
   }, [image.id]);
 
   // Load image into Konva
@@ -73,6 +75,13 @@ export default function AnnotationCanvas({ image, onPolygonSaved, onPolygonDelet
       const w = img.naturalWidth * scale;
       const h = img.naturalHeight * scale;
       setImgLayout({ x: (stageWidth - w) / 2, y: (STAGE_H - h) / 2, width: w, height: h });
+    };
+    img.onerror = () => {
+      toast.error('Failed to load image. Try re-selecting it.');
+    };
+    return () => {
+      img.onload = null;
+      img.onerror = null;
     };
   }, [image.file, stageWidth]);
 

@@ -112,7 +112,7 @@ export default function AnnotatePage() {
           </p>
         </div>
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: '280px 1fr' }}>
+        <div className="grid grid-cols-[280px_1fr] gap-4">
           {/* Left: image list */}
           <ImageList
             images={images}

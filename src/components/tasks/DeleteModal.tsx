@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import { Task } from '@/types';
@@ -13,6 +13,12 @@ interface Props {
 
 export default function DeleteModal({ task, onSuccess, onClose }: Props) {
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const handleDelete = async () => {
     setLoading(true);
