@@ -10,11 +10,11 @@ import { Task, Tag, TaskStatus } from '@/types';
 
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255),
-  description: z.string().default(''),
+  description: z.string(),
   status: z.enum(['todo', 'in_progress', 'done']),
   priority: z.enum(['low', 'medium', 'high']),
   due_date: z.string().min(1, 'Due date is required'),
-  tag_ids: z.array(z.number()).default([]),
+  tag_ids: z.array(z.number()),
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;

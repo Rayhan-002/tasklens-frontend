@@ -7,6 +7,28 @@ const api = axios.create({
   },
 });
 
+/**
+ * Converts a possibly-relative media path returned by the Django backend
+ * (e.g. "/media/annotation_images/foo.jpg") into an absolute URL using
+ * the backend origin derived from NEXT_PUBLIC_API_URL.
+ *
+ * When the backend serializer is called with request context (the correct
+ * setup) it already returns an absolute URL, so this is a no-op for those
+ * responses. It acts as a safety net in any environment where the context
+ * is missing.
+ */
+export function resolveMediaUrl(url: string): string {
+  if (!url) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? '';
+  try {
+    const origin = new URL(apiBase).origin;
+    return `${origin}${url.startsWith('/') ? url : `/${url}`}`;
+  } catch {
+    return url;
+  }
+}
+
 // Attach JWT access token to every request
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
